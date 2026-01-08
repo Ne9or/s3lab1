@@ -1,79 +1,109 @@
 #include <iostream>
+#include <fstream>
 #include <string>
-#include <limits>
 
-#include "SubstringFrequencyCounter.hpp"
 #include "ReadOnlyStream.hpp"
-#include "LazySequence.hpp"
-#include "ArraySequence.hpp"
+#include "SubstringFrequencyCounter.hpp"
 
-void print_menu() {
-    std::cout << "\n===== Substring Frequency Counter =====\n";
-    std::cout << "1. Count substring frequency in a string\n";
-    std::cout << "0. Exit\n";
-    std::cout << "Choose option: ";
-}
+std::string read_from_console()
+{
+    std::cout << "Введите текст (пустая строка — конец ввода):\n";
 
-std::string read_line(const std::string& prompt) {
-    std::cout << prompt;
-    std::string s;
-    std::getline(std::cin, s);
-    return s;
-}
+    std::string result;
+    std::string line;
 
-void handle_string_mode() {
-    std::string text = read_line("Enter text: ");
-    std::string pattern = read_line("Enter pattern: ");
+    while (true)
+    {
+        std::getline(std::cin, line);
+        if (line.empty())
+            break;
 
-    if (pattern.empty()) {
-        std::cout << "Error: pattern must not be empty\n";
-        return;
+        result += line;
+        result += '\n';
     }
 
-    try {
-        ReadOnlyStream<char> stream(text);
-        SubstringFrequencyCounter counter(pattern);
-
-        size_t result = counter.count(stream);
-
-        std::cout << "Occurrences: " << result << '\n';
-    }
-    catch (const std::exception& e) {
-        std::cout << "Error: " << e.what() << '\n';
-    }
+    return result;
 }
 
-int main() {
-    bool running = true;
+std::string read_from_file(const std::string& filename)
+{
+    std::ifstream file(filename);
+    if (!file.is_open())
+        throw std::runtime_error("Не удалось открыть файл");
 
-    while (running) {
-        print_menu();
+    std::string result;
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        result += line;
+        result += '\n';
+    }
+
+    return result;
+}
+
+int main()
+{
+    while (true)
+    {
+        std::cout << "\nМеню:\n";
+        std::cout << "1 — ввод с консоли\n";
+        std::cout << "2 — ввод из файла\n";
+        std::cout << "0 — выход\n";
+        std::cout << "> ";
 
         int choice;
-        if (!(std::cin >> choice)) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "Invalid input\n";
-            continue;
+        std::cin >> choice;
+        std::cin.ignore();
+
+        if (choice == 0)
+        {
+            std::cout << "Завершение программы.\n";
+            return 0;
         }
 
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        try
+        {
+            std::string text;
 
-        switch (choice) {
-        case 1:
-            handle_string_mode();
-            break;
+            if (choice == 1)
+            {
+                text = read_from_console();
+            }
+            else if (choice == 2)
+            {
+                std::cout << "Введите имя файла:\n> ";
+                std::string filename;
+                std::getline(std::cin, filename);
+                text = read_from_file(filename);
+            }
+            else
+            {
+                std::cout << "Неверный пункт меню.\n";
+                continue; 
+            }
 
-        case 0:
-            running = false;
-            break;
+            std::cout << "Введите шаблон для поиска:\n> ";
+            std::string pattern;
+            std::getline(std::cin, pattern);
 
-        default:
-            std::cout << "Unknown option\n";
+            if (pattern.empty())
+            {
+                std::cout << "Шаблон не может быть пустым.\n";
+                continue;
+            }
+
+            ReadOnlyStream<char> stream(text);
+            SubstringFrequencyCounter counter(pattern);
+
+            size_t occurrences = counter.count(stream);
+
+            std::cout << "Результат: " << occurrences << "\n";
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Ошибка: " << e.what() << "\n";
         }
     }
-
-    std::cout << "Program finished\n";
-    return 0;
 }
-

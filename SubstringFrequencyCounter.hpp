@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 
 #include "DynamicArray.hpp"
 #include "ReadOnlyStream.hpp"
@@ -8,36 +9,19 @@
 class SubstringFrequencyCounter {
 private:
     DynamicArray<char> pattern;
-    DynamicArray<char> window;
 
-    bool window_equals_pattern() const {
-        if (window.get_size() != pattern.get_size())
-            return false;
-
-        for (int i = 0; i < pattern.get_size(); ++i) {
-            if (window.get(i) != pattern.get(i))
-                return false;
-        }
-
-        return true;
-    }
-
-    void slide_window(char next_char) {
-        if (window.get_size() < pattern.get_size()) {
-            window.push_back(next_char);
-            return;
-        }
-
-        for (int i = 1; i < window.get_size(); ++i) {
-            window.set(i - 1, window.get(i));
-        }
-
-        window.set(window.get_size() - 1, next_char);
+    bool is_delimiter(char c) const
+    {
+        return c == ' '  ||
+               c == '\n' ||
+               c == '\t' ||
+               c == ','  ||
+               c == ';';
     }
 
 public:
     explicit SubstringFrequencyCounter(const std::string& pat)
-        : pattern(pat.size()), window()
+        : pattern(pat.size())
     {
         if (pat.empty())
             throw std::invalid_argument("Pattern must not be empty");
@@ -46,18 +30,38 @@ public:
             pattern.set(i, pat[i]);
     }
 
-    size_t count(ReadOnlyStream<char>& stream) {
+    size_t count(ReadOnlyStream<char>& stream)
+    {
         stream.open();
 
         size_t occurrences = 0;
-        window.reset();
+        int matched = 0;
 
-        while (!stream.is_end_of_stream()) {
+        while (!stream.is_end_of_stream())
+        {
             char c = stream.read();
-            slide_window(c);
 
-            if (window_equals_pattern())
-                ++occurrences;
+            // игнорируем разделители (включая CSV)
+            if (is_delimiter(c))
+                continue;
+
+            if (c == pattern.get(matched))
+            {
+                ++matched;
+
+                if (matched == pattern.get_size())
+                {
+                    ++occurrences;
+                    matched = 0;
+                }
+            }
+            else
+            {
+                if (c == pattern.get(0))
+                    matched = 1;
+                else
+                    matched = 0;
+            }
         }
 
         stream.close();
