@@ -2,7 +2,7 @@
 
 #include "Generator.hpp"
 
-// ===== constructors =====
+// constructors
 
 template <typename T>
 LazySequence<T>::LazySequence()
@@ -32,7 +32,7 @@ LazySequence<T>::LazySequence(std::unique_ptr<Generator<T>>&& gen)
     generator = std::move(gen);
 }
 
-// ===== init =====
+// init
 
 template <typename T>
 void LazySequence<T>::init_function_generator(
@@ -45,7 +45,7 @@ void LazySequence<T>::init_function_generator(
     );
 }
 
-// ===== factory =====
+// create
 
 template <typename T>
 std::shared_ptr<LazySequence<T>> LazySequence<T>::create()
@@ -87,7 +87,7 @@ std::shared_ptr<LazySequence<T>> LazySequence<T>::create(
     );
 }
 
-// ===== core =====
+// get/has
 
 template <typename T>
 T LazySequence<T>::get(size_t index)
@@ -134,7 +134,7 @@ bool LazySequence<T>::has_next() const
     return generator && generator->has_next();
 }
 
-// ===== combinators =====
+// fill
 
 template <typename T>
 std::shared_ptr<LazySequence<T>> LazySequence<T>::append(

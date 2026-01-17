@@ -92,4 +92,4 @@ public:
     );
 };
 
-#include "LazySequence.inl"
+#include "../src/LazySequence.inl"
