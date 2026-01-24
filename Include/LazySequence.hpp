@@ -5,11 +5,10 @@
 #include <stdexcept>
 
 template <typename T>
-class Generator;   // forward declaration
+class Generator; 
 
 #include "Sequence.hpp"
 #include "ArraySequence.hpp"
-#include "Cardinal.hpp"
 
 template <typename T>
 class LazySequence : public std::enable_shared_from_this<LazySequence<T>>
